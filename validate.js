@@ -187,9 +187,10 @@
     /**
      * @public
      * 额外增加的检查区域方法,支持多参数,直接返回boolean,错误信息请查看this.errors   add by awen
-     * eg.  checkFiled('username','email'...)
+     * eg.  checkFields('username','email'...)
      */
-    FormValidator.prototype.checkFiled = function() {
+    FormValidator.prototype.checkFields = function() {
+        this.errors = [];
         for (var i =0,l= arguments.length; i<l; i++) {
             var field = this.fields[arguments[i]]|| {},
                 element = this.form[field.name];

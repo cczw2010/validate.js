@@ -14,33 +14,33 @@
 
     var defaults = {
         messages: {
-            required: 'The %s field is required.',
-            matches: 'The %s field does not match the %s field.',
-            "default": 'The %s field is still set to default, please change.',
-            valid_email: 'The %s field must contain a valid email address.',
-            valid_emails: 'The %s field must contain all valid email addresses.',
-            min_length: 'The %s field must be at least %s characters in length.',
-            max_length: 'The %s field must not exceed %s characters in length.',
-            exact_length: 'The %s field must be exactly %s characters in length.',
-            greater_than: 'The %s field must contain a number greater than %s.',
-            less_than: 'The %s field must contain a number less than %s.',
-            alpha: 'The %s field must only contain alphabetical characters.',
-            alpha_numeric: 'The %s field must only contain alpha-numeric characters.',
-            alpha_dash: 'The %s field must only contain alpha-numeric characters, underscores, and dashes.',
-            numeric: 'The %s field must contain only numbers.',
-            integer: 'The %s field must contain an integer.',
-            decimal: 'The %s field must contain a decimal number.',
-            is_natural: 'The %s field must contain only positive numbers.',
-            is_natural_no_zero: 'The %s field must contain a number greater than zero.',
-            valid_ip: 'The %s field must contain a valid IP.',
-            valid_base64: 'The %s field must contain a base64 string.',
-            valid_credit_card: 'The %s field must contain a valid credit card number.',
-            is_file_type: 'The %s field must contain only %s files.',
-            valid_url: 'The %s field must contain a valid URL.',
-            greater_than_date: 'The %s field must contain a more recent date than %s.',
-            less_than_date: 'The %s field must contain an older date than %s.',
-            greater_than_or_equal_date: 'The %s field must contain a date that\'s at least as recent as %s.',
-            less_than_or_equal_date: 'The %s field must contain a date that\'s %s or older.'
+           required:"%s不能为空",
+           matches:"%s与%s不同",
+           "default":"%s请勿使用默认项",
+           valid_email:"%s不是有效地email地址",
+           valid_emails:"%s必须是指定列表中的有效email地址",
+           min_length:"%s不能少于%s个字符",
+           max_length:"%s不能大于%s个字符",
+           exact_length:"%s必须为%s个字符",
+           greater_than:"%s中的数字不能小于%s",
+           less_than:"%s中的数字不能大于%s",
+           alpha:"%s只能是小写字母",
+           alpha_numeric:"%s只能是小写字母或者数字",
+           alpha_dash:"%s中只能包含字母,数字字符,下划线和破折号",
+           numeric:"%s仅为数字",
+           integer:"%s仅为整数",
+           decimal:"%s仅为十进制数",
+           is_natural:"%s只能是自然数",
+           is_natural_no_zero:"%s只能是非0自然数",
+           valid_ip:"%s必须是有效地ip地址",
+           valid_base64:"%s必须是一个有效地base64字符串",
+           valid_credit_card:"%s必须是一个有效地信用卡号码",
+           is_file_type:"%s必须是指定的%s中的类型",
+           valid_url:"%s必须是一个有效地url地址",
+           greater_than_date:"%s必须是一个大于%s的日期",
+           less_than_date:"%s必须是一个小于%s的日期",
+           greater_than_or_equal_date:"%s必须是晚于或者等于%s的日期",
+           less_than_or_equal_date:"%s必须是早于或者等于%s的日期"
         },
         callback: function(errors) {
 
@@ -156,48 +156,6 @@
         // return this for chaining
         return this;
     };
-    
-    /*
-     * @public
-     *
-     * @param fields - Array - [{
-     *     name: The name of the element (i.e. <input name="myField" />)
-     *     display: 'Field Name'
-     *     rules: required|matches[password_confirm]
-     * }]
-     * Sets new custom validation rules set
-     */
-
-    FormValidator.prototype.setRules = function(fields) {
-        this.fields = {};
-        
-        for (var i = 0, fieldLength = fields.length; i < fieldLength; i++) {
-            var field = fields[i];
-
-            // If passed in incorrectly, we need to skip the field.
-            if ((!field.name && !field.names) || !field.rules) {
-                console.warn('validate.js: The following field is being skipped due to a misconfiguration:');
-                console.warn(field);
-                console.warn('Check to ensure you have properly configured a name and rules for this field');
-                continue;
-            }
-
-            /*
-             * Build the master fields array that has all the information needed to validate
-             */
-
-            if (field.names) {
-                for (var j = 0, fieldNamesLength = field.names.length; j < fieldNamesLength; j++) {
-                    this._addField(field, field.names[j]);
-                }
-            } else {
-                this._addField(field, field.name);
-            }
-        }
-
-        // return this for chaining
-        return this;
-    };
 
     /*
      * @public
@@ -225,6 +183,40 @@
 
         // return this for chaining
         return this;
+    };
+    /**
+     * @public
+     * 额外增加的检查区域方法,支持多参数,直接返回boolean,错误信息请查看this.errors   add by awen
+     * eg.  checkFiled('username','email'...)
+     */
+    FormValidator.prototype.checkFiled = function() {
+        for (var i =0,l= arguments.length; i<l; i++) {
+            var field = this.fields[arguments[i]]|| {},
+                element = this.form[field.name];
+            if (element && element !== undefined) {
+                field.id = attributeValue(element, 'id');
+                field.element = element;
+                field.type = (element.length > 0) ? element[0].type : element.type;
+                field.value = attributeValue(element, 'value');
+                field.checked = attributeValue(element, 'checked');
+
+                if (field.depends && typeof field.depends === "function") {
+                    if (field.depends.call(this, field)) {
+                        this._validateField(field);
+                    }
+                } else if (field.depends && typeof field.depends === "string" && this.conditionals[field.depends]) {
+                    if (this.conditionals[field.depends].call(this,field)) {
+                        this._validateField(field);
+                    }
+                } else {
+                    this._validateField(field);
+                }
+            }
+        }
+        if (this.errors.length>0) {
+            return false;
+        }
+        return true;
     };
 
     /*

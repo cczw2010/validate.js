@@ -1,6 +1,9 @@
 # validate.js
 
 validate.js is a lightweight JavaScript form validation library inspired by CodeIgniter.
+base on http://rickharrison.github.io/validate.js 
+
+提示语中文化,并提供了checkField方法,方便直接校验某项. 
 
 ## Features
 
